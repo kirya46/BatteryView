@@ -33,7 +33,7 @@ class BatteryView(context: Context) : View(context) {
         backgroundPath = Path()
         backgroundPaint = Paint()
 //        backgroundPaint.color = Color.parseColor("#eaeaea")
-        backgroundPaint.color = Color.CYAN
+        backgroundPaint.color = Color.BLUE
 
         bodyPath = Path()
         bodyPaint = Paint()
@@ -42,7 +42,7 @@ class BatteryView(context: Context) : View(context) {
         sectionBackgroundPath = Path()
         sectionBackgroundPaintTransparent = Paint()
         sectionBackgroundPaintTransparent.color = Color.WHITE
-        sectionBackgroundPaintTransparent.alpha = 20
+        sectionBackgroundPaintTransparent.alpha = 80
 
         sectionFilledPath = Path()
         sectionPaintGreen = Paint()
