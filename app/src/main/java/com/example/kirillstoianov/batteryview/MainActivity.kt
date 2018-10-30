@@ -16,19 +16,17 @@ class MainActivity : AppCompatActivity() {
         val batteryView = BatteryView(this)
 //        val layoutParams = FrameLayout.LayoutParams(300, 700)
 //        batteryView.layoutParams = layoutParams
-
-        val container = findViewById<ViewGroup>(R.id.container)
-        container.addView(batteryView)
-
+//        batteryView.maxSectionCount =20
 
         findViewById<Button>(R.id.btnIncrease).setOnClickListener {
-            count += 1
-            batteryView.fillSectionCount = count
+            batteryView.inscrease()
         }
 
         findViewById<Button>(R.id.btnDecrease).setOnClickListener {
-            count -= 1
-            batteryView.fillSectionCount = count
+            batteryView.decrease()
         }
+
+        val container = findViewById<ViewGroup>(R.id.container)
+        container.addView(batteryView)
     }
 }
