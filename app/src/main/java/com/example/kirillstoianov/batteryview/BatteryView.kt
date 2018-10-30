@@ -3,6 +3,7 @@ package com.example.kirillstoianov.batteryview
 import android.content.Context
 import android.graphics.*
 import android.support.v4.content.ContextCompat
+import android.util.AttributeSet
 import android.view.View
 import kotlin.math.roundToInt
 
@@ -11,7 +12,7 @@ import kotlin.math.roundToInt
  * Created by Kirill Stoianov on 25.10.18.
  */
 //class BatteryView(context: Context, attributeSet: AttributeSet?, deffStyle: Int) : View(context, attributeSet, deffStyle) {
-class BatteryView(context: Context) : View(context) {
+class BatteryView(context: Context, attrs: AttributeSet?, defStyleAttr: Int) : View(context, attrs, defStyleAttr)  {
 
     companion object {
         val TAG: String = BatteryView::class.java.simpleName
@@ -72,6 +73,9 @@ class BatteryView(context: Context) : View(context) {
     private var sectionPaintGreen: Paint
     private var sectionPaintYellow: Paint
     private var sectionPaintRed: Paint
+
+    constructor(context: Context) : this(context, null, 0)
+    constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
 
     init {
         backgroundPath = Path()
