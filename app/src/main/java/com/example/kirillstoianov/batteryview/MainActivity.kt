@@ -2,6 +2,7 @@ package com.example.kirillstoianov.batteryview
 
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 
@@ -14,6 +15,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         val batteryView = BatteryView(this)
+
 //        val layoutParams = FrameLayout.LayoutParams(300, 700)
 //        batteryView.layoutParams = layoutParams
 

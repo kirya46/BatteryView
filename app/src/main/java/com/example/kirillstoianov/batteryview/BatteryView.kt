@@ -24,51 +24,76 @@ class BatteryView(context: Context) : View(context) {
             invalidate()
         }
 
-    var fillSectionCount: Int = 0
+    var fillSectionCount: Int = 3
         set(value) {
-            field = if (value > maxSectionCount){
+            field = if (value > maxSectionCount) {
                 maxSectionCount
-            }else {
+            } else {
                 value
             }
             invalidate()
         }
 
+
+    //battery
     private var backgroundPath: Path
     private val backgroundPaint: Paint
 
+    //not filled grey body
     private var bodyPath: Path
     private var bodyPaint: Paint
 
-    private var sectionBackgroundPath: Path
-    private var sectionBackgroundPaintTransparent: Paint
+    //filled color body
+    private var bodyFilledPath: Path
+    private var bodyGreenPaint: Paint
+    private var bodyYellowPaint: Paint
+    private var bodyRedPaint: Paint
 
-    private var sectionFilledPath: Path
-    private var sectionPaintGreen: Paint
-    private var sectionPaintYellow: Paint
-    private var sectionPaintRed: Paint
+    //grey rect
+    private var darkGreyPath:Path
+    private var darkGreyPathPaint:Paint
+
+    //section
+    private var sectionPath: Path
+    private var sectionPaint: Paint
 
     init {
+        setLayerType(View.LAYER_TYPE_SOFTWARE,null)
+
         backgroundPath = Path()
         backgroundPaint = Paint()
         backgroundPaint.color = Color.parseColor("#eaeaea")
 
+        //not filled grey body
         bodyPath = Path()
         bodyPaint = Paint()
-        bodyPaint.color = Color.parseColor("#8d8d8d")
+        bodyPaint.color = Color.WHITE
+        bodyPaint.alpha = 80
 
-        sectionBackgroundPath = Path()
-        sectionBackgroundPaintTransparent = Paint()
-        sectionBackgroundPaintTransparent.color = Color.WHITE
-        sectionBackgroundPaintTransparent.alpha = 80
+        //filled color body
+        bodyFilledPath = Path()
+        bodyGreenPaint = Paint()
+        bodyGreenPaint.color = Color.parseColor("#0adbac")
+        bodyYellowPaint = Paint()
+        bodyYellowPaint.color = Color.parseColor("#ffb300")
+        bodyRedPaint = Paint()
+        bodyRedPaint.color = Color.parseColor("#ff2222")
 
-        sectionFilledPath = Path()
-        sectionPaintGreen = Paint()
-        sectionPaintGreen.color = Color.parseColor("#0adbac")
-        sectionPaintYellow = Paint()
-        sectionPaintYellow.color = Color.parseColor("#ffb300")
-        sectionPaintRed = Paint()
-        sectionPaintRed.color = Color.parseColor("#ff2222")
+        //dark grey
+        darkGreyPath = Path()
+        darkGreyPathPaint = Paint()
+        darkGreyPathPaint.color = Color.parseColor("#8d8d8d")
+
+        //section
+        sectionPath = Path()
+        sectionPaint = Paint().apply {                                                              //TODO: Problem with clearing all layers below
+            alpha =0xFF //transparent
+            xfermode = PorterDuffXfermode(PorterDuff.Mode.CLEAR)
+            isAntiAlias = true
+//            style = Paint.Style.FILL
+        }
+
+
     }
 
     override fun onDraw(canvas: Canvas?) {
@@ -78,8 +103,9 @@ class BatteryView(context: Context) : View(context) {
 
         canvas?.drawPath(backgroundPath, backgroundPaint)
         canvas?.drawPath(bodyPath, bodyPaint)
-        canvas?.drawPath(sectionBackgroundPath, sectionBackgroundPaintTransparent)
-        canvas?.drawPath(sectionFilledPath, sectionPaintGreen)
+        canvas?.drawPath(bodyFilledPath, bodyYellowPaint)                                            //fixme change destination color
+        canvas?.drawPath(darkGreyPath,darkGreyPathPaint)
+        canvas?.drawPath(sectionPath, sectionPaint)
 
         canvas?.apply { drawLightning(this) }
     }
@@ -106,57 +132,64 @@ class BatteryView(context: Context) : View(context) {
         backgroundPath.addPath(tipPath)
 
 
-        //draw body
+        //draw non-filled body
         val sectionTop = top + outerCornerRadius - outerCornerRadius / 3
         val sectionBodyLeft = left + innerCornerRadius
         val sectionBodiTop = sectionTop + innerCornerRadius
         val sectionBodyRight = right - innerCornerRadius
         val sectiobBodyBottom = bottom - innerCornerRadius
-
         bodyPath = drawRoundReact(sectionBodyLeft, sectionBodiTop, sectionBodyRight, sectiobBodyBottom, innerCornerRadius, innerCornerRadius, false)
+
+        //draw filled body TODO: adjust height and remove corners
+        bodyFilledPath= drawRoundReact(sectionBodyLeft, sectionBodiTop, sectionBodyRight, sectiobBodyBottom, innerCornerRadius, innerCornerRadius, false)
+
+
+        //draw dark grey rect
+       darkGreyPath= drawRoundReact(sectionBodyLeft, sectionBodiTop, sectionBodyRight, sectiobBodyBottom, innerCornerRadius, innerCornerRadius, false)
 
         //draw sections
         val partHeight = ((sectiobBodyBottom - sectionBodiTop) - partCornerRadius * (maxSectionCount + 1)) / maxSectionCount
         val partLeft = sectionBodyLeft + partCornerRadius
         val partRight = sectionBodyRight - partCornerRadius
 
+        var start = maxSectionCount - fillSectionCount
         IntRange(1, maxSectionCount).forEach { index ->
 
             when (index) {
                 1 -> {
                     val partTop = sectionBodiTop + partCornerRadius
                     val partBottom = sectionBodiTop + partCornerRadius + partHeight
-                    sectionBackgroundPath.addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
+                    sectionPath.addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
                 }
 
                 else -> {
                     val partTop = sectionBodiTop + partCornerRadius + ((partHeight + partCornerRadius) * (index - 1))
                     val partBottom = sectionBodiTop + partCornerRadius + ((partHeight + partCornerRadius) * (index - 1)) + partHeight
-                    sectionBackgroundPath.addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
+                    sectionPath.addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
                 }
             }
         }
-
-
-        sectionFilledPath = Path()//FIXME tmp solution for clear path
-
-        var start = maxSectionCount - fillSectionCount
-        IntRange(start, maxSectionCount).reversed().forEach { index ->
-
-            when (index) {
-                1 -> {
-                    val partTop = sectionBodiTop + partCornerRadius
-                    val partBottom = sectionBodiTop + partCornerRadius + partHeight
-                    sectionFilledPath.addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
-                }
-
-                else -> {
-                    val partTop = sectionBodiTop + partCornerRadius + ((partHeight + partCornerRadius) * (index - 1))
-                    val partBottom = sectionBodiTop + partCornerRadius + ((partHeight + partCornerRadius) * (index - 1)) + partHeight
-                    sectionFilledPath.addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
-                }
-            }
-        }
+//
+//
+//        sectionFilledPath = Path()//FIXME tmp solution for clear path
+//
+//        var start = maxSectionCount - fillSectionCount
+//        IntRange(start, maxSectionCount).reversed().forEach { index ->
+//
+//            when (index) {
+//                1 -> {
+//                    val partTop = sectionBodiTop + partCornerRadius
+//                    val partBottom = sectionBodiTop + partCornerRadius + partHeight
+//                    sectionFilledPath.addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
+//                }
+//
+//                else -> {
+//                    val partTop = sectionBodiTop + partCornerRadius + ((partHeight + partCornerRadius) * (index - 1))
+//                    val partBottom = sectionBodiTop + partCornerRadius + ((partHeight + partCornerRadius) * (index - 1)) + partHeight
+//                    sectionFilledPath.addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
+//                }
+//            }
+//        }
     }
 
     private fun drawLightning(canvas: Canvas) {
