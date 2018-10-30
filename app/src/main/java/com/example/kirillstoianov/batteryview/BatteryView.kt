@@ -2,7 +2,9 @@ package com.example.kirillstoianov.batteryview
 
 import android.content.Context
 import android.graphics.*
+import android.support.v4.content.ContextCompat
 import android.view.View
+import kotlin.math.roundToInt
 
 
 /**
@@ -15,25 +17,41 @@ class BatteryView(context: Context) : View(context) {
         val TAG: String = BatteryView::class.java.simpleName
     }
 
-    var backgroundPath: Path
-    val backgroundPaint: Paint
 
-    var bodyPath: Path
-    var bodyPaint: Paint
+    var maxSectionCount: Int = 6
+        set(value) {
+            field = value
+            invalidate()
+        }
 
-    var sectionBackgroundPath : Path
-    var sectionBackgroundPaintTransparent: Paint
+    var fillSectionCount: Int = 0
+        set(value) {
+            field = if (value > maxSectionCount){
+                maxSectionCount
+            }else {
+                value
+            }
+            invalidate()
+        }
 
-    var sectionFilledPath:Path
-    var sectionPaintGreen: Paint
+    private var backgroundPath: Path
+    private val backgroundPaint: Paint
 
-    val sectionCount = 6
+    private var bodyPath: Path
+    private var bodyPaint: Paint
+
+    private var sectionBackgroundPath: Path
+    private var sectionBackgroundPaintTransparent: Paint
+
+    private var sectionFilledPath: Path
+    private var sectionPaintGreen: Paint
+    private var sectionPaintYellow: Paint
+    private var sectionPaintRed: Paint
 
     init {
         backgroundPath = Path()
         backgroundPaint = Paint()
-//        backgroundPaint.color = Color.parseColor("#eaeaea")
-        backgroundPaint.color = Color.BLUE
+        backgroundPaint.color = Color.parseColor("#eaeaea")
 
         bodyPath = Path()
         bodyPaint = Paint()
@@ -46,21 +64,24 @@ class BatteryView(context: Context) : View(context) {
 
         sectionFilledPath = Path()
         sectionPaintGreen = Paint()
-        sectionPaintGreen.color = Color.GREEN
+        sectionPaintGreen.color = Color.parseColor("#0adbac")
+        sectionPaintYellow = Paint()
+        sectionPaintYellow.color = Color.parseColor("#ffb300")
+        sectionPaintRed = Paint()
+        sectionPaintRed.color = Color.parseColor("#ff2222")
     }
 
     override fun onDraw(canvas: Canvas?) {
         super.onDraw(canvas)
 
-//        initPaths()
         drawBattery()
-
 
         canvas?.drawPath(backgroundPath, backgroundPaint)
         canvas?.drawPath(bodyPath, bodyPaint)
-        canvas?.drawPath(sectionBackgroundPath , sectionBackgroundPaintTransparent)
+        canvas?.drawPath(sectionBackgroundPath, sectionBackgroundPaintTransparent)
         canvas?.drawPath(sectionFilledPath, sectionPaintGreen)
 
+        canvas?.apply { drawLightning(this) }
     }
 
     private fun drawBattery() {
@@ -95,42 +116,62 @@ class BatteryView(context: Context) : View(context) {
         bodyPath = drawRoundReact(sectionBodyLeft, sectionBodiTop, sectionBodyRight, sectiobBodyBottom, innerCornerRadius, innerCornerRadius, false)
 
         //draw sections
-        val partHeight = ((sectiobBodyBottom - sectionBodiTop) - partCornerRadius * (sectionCount + 1)) / sectionCount
+        val partHeight = ((sectiobBodyBottom - sectionBodiTop) - partCornerRadius * (maxSectionCount + 1)) / maxSectionCount
         val partLeft = sectionBodyLeft + partCornerRadius
         val partRight = sectionBodyRight - partCornerRadius
 
-        IntRange(1, sectionCount).forEach { index ->
+        IntRange(1, maxSectionCount).forEach { index ->
 
             when (index) {
                 1 -> {
                     val partTop = sectionBodiTop + partCornerRadius
                     val partBottom = sectionBodiTop + partCornerRadius + partHeight
-                    sectionBackgroundPath .addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
+                    sectionBackgroundPath.addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
                 }
 
                 else -> {
                     val partTop = sectionBodiTop + partCornerRadius + ((partHeight + partCornerRadius) * (index - 1))
-                    val partBottom = sectionBodiTop + partCornerRadius + ((partHeight + partCornerRadius) * (index - 1))+partHeight
-                    sectionBackgroundPath .addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
+                    val partBottom = sectionBodiTop + partCornerRadius + ((partHeight + partCornerRadius) * (index - 1)) + partHeight
+                    sectionBackgroundPath.addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
                 }
             }
         }
 
 
+        sectionFilledPath = Path()//FIXME tmp solution for clear path
 
-        //TODO it is mock battery filling
-        IntRange(1, sectionCount).forEach { index ->
+        var start = maxSectionCount - fillSectionCount
+        IntRange(start, maxSectionCount).reversed().forEach { index ->
 
             when (index) {
-                5,6-> {
+                1 -> {
+                    val partTop = sectionBodiTop + partCornerRadius
+                    val partBottom = sectionBodiTop + partCornerRadius + partHeight
+                    sectionFilledPath.addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
+                }
+
+                else -> {
                     val partTop = sectionBodiTop + partCornerRadius + ((partHeight + partCornerRadius) * (index - 1))
-                    val partBottom = sectionBodiTop + partCornerRadius + ((partHeight + partCornerRadius) * (index - 1))+partHeight
-                    sectionFilledPath .addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
+                    val partBottom = sectionBodiTop + partCornerRadius + ((partHeight + partCornerRadius) * (index - 1)) + partHeight
+                    sectionFilledPath.addPath(drawRoundReact(partLeft, partTop, partRight, partBottom, partCornerRadius, partCornerRadius, false))
                 }
             }
         }
     }
 
+    private fun drawLightning(canvas: Canvas) {
+        val drawable = ContextCompat.getDrawable(context, R.drawable.ic_lightning)
+        val lightningWidth: Int = (width / 2f).roundToInt()
+        val lightningHeight: Int = (height / 2f).roundToInt()
+
+        val drawableLeft: Int = width / 2 - lightningWidth / 2
+        val drawableRight: Int = width / 2 + lightningWidth / 2
+        val drawableTop: Int = height / 2 - lightningHeight / 2
+        val drawableBottom: Int = height / 2 + lightningHeight / 2
+
+        drawable?.setBounds(drawableLeft, drawableTop, drawableRight, drawableBottom)
+        drawable?.draw(canvas)
+    }
 
     private fun drawRoundReact(left: Float, top: Float, right: Float, bottom: Float, rx: Float, ry: Float, conformToOriginalPost: Boolean): Path {
         var rx = rx
